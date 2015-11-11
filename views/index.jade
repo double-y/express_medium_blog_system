@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  .row
+    h1= title
+    p Welcome to #{title}
+    #article_list
+    form#blog_form
+    #trix_parser(style="display:none")
+      trix-editor#trix_parser(input="blog_form_blog_input")

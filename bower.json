@@ -1,0 +1,25 @@
+{
+  "name": "express_trix_blog_system",
+  "version": "0.0.0",
+  "homepage": "https://github.com/double-y/express_trix_blog_system",
+  "authors": [
+    "Yosuke Yasuda <double.y.919.quick@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "trix": "0.9.0",
+    "bootstrap": "3.3.5",
+    "Medium.js": "medium#~1.0.1"
+  }
+}
