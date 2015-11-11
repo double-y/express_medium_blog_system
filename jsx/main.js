@@ -3,47 +3,38 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-function getTrixParser(){
-    return document.querySelector("trix-editor#trix_parser");
-}
-
 var BlogList = React.createClass({
-    fetchEditorJsons: function(){
-        //localStorage["editorStorage"] = JSON.stringify([]);
-        if(localStorage["editorStorage"]){
-            var editorJsons = JSON.parse(localStorage["editorStorage"]);
-            return editorJsons;
+    fetchBlogs: function(){
+        //localStorage["mediumBlogStorage"] = JSON.stringify([]);
+        if(localStorage["mediumBlogStorage"]){
+            return JSON.parse(localStorage["mediumBlogStorage"]);
         }else{
-            localStorage["editorStorage"] = JSON.stringify([]);
+            localStorage["mediumBlogStorage"] = JSON.stringify([]);
             return [];
         }
     },
     render: function(){
-        var editorJsons = this.fetchEditorJsons();
-        var columns = editorJsons.map(function(editorJson){
-            return <BlogColumn trixjson={editorJson}/>
+        var blogs = this.fetchBlogs();
+        var columns = blogs.map(function(blog){
+            return <BlogColumn blog={blog}/>
         });
-        return (<ul>{columns}</ul>);
+        return (<ul id="article_ul">{columns}</ul>);
     }
 });
 
 var BlogColumn = React.createClass({
-    getInitialState: function() {
+    getInitialState: function(){
         return {isUpdateMode: false};
-    },
-    parseTrixJsonToHtml: function(json){
-        getTrixParser().editor.loadJSON(json)
-        return getTrixParser().innerHTML;
     },
     handleClick: function(event) {
         this.setState({isUpdateMode: !this.state.isUpdateMode});
     },
     render: function(){
-        var articleHtml = this.parseTrixJsonToHtml(this.props.trixjson);
+        var articleHtml = this.props.blog;
         if(this.state.isUpdateMode){
-            return (<li onClick={this.handleClick}><div class='trix-content'>{articleHtml}</div><UpdateBlogBox/></li>);
+            return (<li onClick={this.handleClick}><MediumEditor/><UpdateBlogBox/></li>);
         }else{
-            return (<li><div class='trix-content'>{articleHtml}</div><hr/></li>);
+            return (<li><div dangerouslySetInnerHTML={{__html: articleHtml}}></div><hr/></li>);
         }
     }
 });
@@ -51,34 +42,32 @@ var BlogColumn = React.createClass({
 var AddBlogBox = React.createClass({
     addBlog: function(event){
         event.preventDefault();
-        console.log("clicked");
-        var trixeditor = document.querySelector('trix-editor#add_blog_editor').editor;
-        var editorStorage = JSON.parse(localStorage["editorStorage"]);
-        editorStorage.push(trixeditor);
-        localStorage["editorStorage"] = JSON.stringify(editorStorage);
+        var content = this.refs.editor.getHtmlString();
+        var blogStorage = JSON.parse(localStorage["mediumBlogStorage"]);
+        blogStorage.push(content);
+        localStorage["mediumBlogStorage"] = JSON.stringify(blogStorage);
         ReactDOM.render(
             <BlogList/>,
             document.getElementById('article_list')
         );
     },
     render: function(){
+        var self = this;
         return (
             <div>
-                <trix-editor id='add_blog_editor'></trix-editor>
+                <MediumEditor ref="editor"/>
                 <a onClick={this.addBlog}>submit</a>
-            </div>
-        )
+            </div>)
     }
 });
 
 var UpdateBlogBox = React.createClass({
     updateBlog: function(event){
         event.preventDefault();
-        console.log("clicked");
         var trixeditor = document.querySelector('trix-editor#add_blog_editor').editor;
-        var editorStorage = JSON.parse(localStorage["editorStorage"]);
+        var editorStorage = JSON.parse(localStorage["mediumBlogStorage"]);
         editorStorage.push(trixeditor);
-        localStorage["editorStorage"] = JSON.stringify(editorStorage);
+        localStorage["mediumBlogStorage"] = JSON.stringify(editorStorage);
         ReactDOM.render(
             <BlogList/>,
             document.getElementById('article_list')
@@ -87,8 +76,43 @@ var UpdateBlogBox = React.createClass({
     render: function(){
         return (
             <div>
-                <trix-editor id='update_blog_editor'></trix-editor>
+                <MediumEditor/>
                 <a onClick={this.updateBlog}>update</a>
+            </div>
+        )
+    }
+});
+
+var MediumEditor = React.createClass({
+    renderMediumEditor: function(dom){
+        this._medium_dom = dom;
+        this._medium = new Medium({
+            element: dom,
+            mode: Medium.richMode,
+            placeholder: 'Your Article',
+            attributes: null,
+            tags: null,
+            pasteAsText: false
+        });
+    },
+    getHtmlString: function(){
+        return this._medium_dom.innerHTML;
+    },
+    invokeBold: function(event){
+        if(this._medium_dom !== document.activeElement){
+            this._medium.select();
+        }
+        this._medium.invokeElement('b', {
+            title: "I'm bold!",
+            style: "color: #66d9ef"
+        });
+    },
+    render: function(){
+        var self = this;
+        return (
+            <div>
+                <div><span onClick={this.invokeBold}>bold</span></div>
+                <div ref={(dom) => self.renderMediumEditor(dom)}></div>
             </div>
         )
     }

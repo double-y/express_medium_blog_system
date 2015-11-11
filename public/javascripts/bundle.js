@@ -49,29 +49,24 @@
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(158);
 	
-	function getTrixParser() {
-	    return document.querySelector("trix-editor#trix_parser");
-	}
-	
 	var BlogList = React.createClass({
-	    fetchEditorJsons: function () {
-	        //localStorage["editorStorage"] = JSON.stringify([]);
-	        if (localStorage["editorStorage"]) {
-	            var editorJsons = JSON.parse(localStorage["editorStorage"]);
-	            return editorJsons;
+	    fetchBlogs: function () {
+	        //localStorage["mediumBlogStorage"] = JSON.stringify([]);
+	        if (localStorage["mediumBlogStorage"]) {
+	            return JSON.parse(localStorage["mediumBlogStorage"]);
 	        } else {
-	            localStorage["editorStorage"] = JSON.stringify([]);
+	            localStorage["mediumBlogStorage"] = JSON.stringify([]);
 	            return [];
 	        }
 	    },
 	    render: function () {
-	        var editorJsons = this.fetchEditorJsons();
-	        var columns = editorJsons.map(function (editorJson) {
-	            return React.createElement(BlogColumn, { trixjson: editorJson });
+	        var blogs = this.fetchBlogs();
+	        var columns = blogs.map(function (blog) {
+	            return React.createElement(BlogColumn, { blog: blog });
 	        });
 	        return React.createElement(
 	            'ul',
-	            null,
+	            { id: 'article_ul' },
 	            columns
 	        );
 	    }
@@ -81,35 +76,23 @@
 	    getInitialState: function () {
 	        return { isUpdateMode: false };
 	    },
-	    parseTrixJsonToHtml: function (json) {
-	        getTrixParser().editor.loadJSON(json);
-	        return getTrixParser().innerHTML;
-	    },
 	    handleClick: function (event) {
 	        this.setState({ isUpdateMode: !this.state.isUpdateMode });
 	    },
 	    render: function () {
-	        var articleHtml = this.parseTrixJsonToHtml(this.props.trixjson);
+	        var articleHtml = this.props.blog;
 	        if (this.state.isUpdateMode) {
 	            return React.createElement(
 	                'li',
 	                { onClick: this.handleClick },
-	                React.createElement(
-	                    'div',
-	                    { 'class': 'trix-content' },
-	                    articleHtml
-	                ),
+	                React.createElement(MediumEditor, null),
 	                React.createElement(UpdateBlogBox, null)
 	            );
 	        } else {
 	            return React.createElement(
 	                'li',
 	                null,
-	                React.createElement(
-	                    'div',
-	                    { 'class': 'trix-content' },
-	                    articleHtml
-	                ),
+	                React.createElement('div', { dangerouslySetInnerHTML: { __html: articleHtml } }),
 	                React.createElement('hr', null)
 	            );
 	        }
@@ -119,18 +102,18 @@
 	var AddBlogBox = React.createClass({
 	    addBlog: function (event) {
 	        event.preventDefault();
-	        console.log("clicked");
-	        var trixeditor = document.querySelector('trix-editor#add_blog_editor').editor;
-	        var editorStorage = JSON.parse(localStorage["editorStorage"]);
-	        editorStorage.push(trixeditor);
-	        localStorage["editorStorage"] = JSON.stringify(editorStorage);
+	        var content = this.refs.editor.getHtmlString();
+	        var blogStorage = JSON.parse(localStorage["mediumBlogStorage"]);
+	        blogStorage.push(content);
+	        localStorage["mediumBlogStorage"] = JSON.stringify(blogStorage);
 	        ReactDOM.render(React.createElement(BlogList, null), document.getElementById('article_list'));
 	    },
 	    render: function () {
+	        var self = this;
 	        return React.createElement(
 	            'div',
 	            null,
-	            React.createElement('trix-editor', { id: 'add_blog_editor' }),
+	            React.createElement(MediumEditor, { ref: 'editor' }),
 	            React.createElement(
 	                'a',
 	                { onClick: this.addBlog },
@@ -143,23 +126,65 @@
 	var UpdateBlogBox = React.createClass({
 	    updateBlog: function (event) {
 	        event.preventDefault();
-	        console.log("clicked");
 	        var trixeditor = document.querySelector('trix-editor#add_blog_editor').editor;
-	        var editorStorage = JSON.parse(localStorage["editorStorage"]);
+	        var editorStorage = JSON.parse(localStorage["mediumBlogStorage"]);
 	        editorStorage.push(trixeditor);
-	        localStorage["editorStorage"] = JSON.stringify(editorStorage);
+	        localStorage["mediumBlogStorage"] = JSON.stringify(editorStorage);
 	        ReactDOM.render(React.createElement(BlogList, null), document.getElementById('article_list'));
 	    },
 	    render: function () {
 	        return React.createElement(
 	            'div',
 	            null,
-	            React.createElement('trix-editor', { id: 'update_blog_editor' }),
+	            React.createElement(MediumEditor, null),
 	            React.createElement(
 	                'a',
 	                { onClick: this.updateBlog },
 	                'update'
 	            )
+	        );
+	    }
+	});
+	
+	var MediumEditor = React.createClass({
+	    renderMediumEditor: function (dom) {
+	        this._medium_dom = dom;
+	        this._medium = new Medium({
+	            element: dom,
+	            mode: Medium.richMode,
+	            placeholder: 'Your Article',
+	            attributes: null,
+	            tags: null,
+	            pasteAsText: false
+	        });
+	    },
+	    getHtmlString: function () {
+	        return this._medium_dom.innerHTML;
+	    },
+	    invokeBold: function (event) {
+	        if (this._medium_dom !== document.activeElement) {
+	            this._medium.select();
+	        }
+	        this._medium.invokeElement('b', {
+	            title: "I'm bold!",
+	            style: "color: #66d9ef"
+	        });
+	    },
+	    render: function () {
+	        var self = this;
+	        return React.createElement(
+	            'div',
+	            null,
+	            React.createElement(
+	                'div',
+	                null,
+	                React.createElement(
+	                    'span',
+	                    { onClick: this.invokeBold },
+	                    'bold'
+	                )
+	            ),
+	            React.createElement('div', { ref: dom => self.renderMediumEditor(dom) })
 	        );
 	    }
 	});
