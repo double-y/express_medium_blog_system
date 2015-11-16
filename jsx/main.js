@@ -103,15 +103,23 @@ var MediumEditor = React.createClass({
             this._medium.select();
         }
         this._medium.invokeElement('b', {
-            title: "I'm bold!",
-            style: "color: #66d9ef"
+            title: "I'm bold!"
+        });
+    },
+    invokeHead: function(event){
+        if(this._medium_dom !== document.activeElement){
+            this._medium.select();
+        }
+        this._medium.invokeElement('h1', {
+            title: "I'm Head!",
+            style: "color: red"
         });
     },
     render: function(){
         var self = this;
         return (
             <div>
-                <div><span onClick={this.invokeBold}>bold</span></div>
+                <div><span onClick={this.invokeBold}>B</span> <span onClick={this.invokeHead}>H</span></div>
                 <div ref={(dom) => self.renderMediumEditor(dom)}></div>
             </div>
         )
