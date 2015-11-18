@@ -26,16 +26,28 @@ var BlogColumn = React.createClass({
     getInitialState: function(){
         return {isUpdateMode: false};
     },
-    handleClick: function(event) {
-        this.setState({isUpdateMode: !this.state.isUpdateMode});
+    updateMode: function(event) {
+        this.setState({isUpdateMode: true});
+    },
+    closeUpdateBox: function(){
+        this.setState({isUpdateMode: false});
+    },
+    handleClick: function(){
+        if(!this.state.isUpdateMode){
+            this.updateMode();
+        }
     },
     render: function(){
         var articleHtml = this.props.blog;
-        if(this.state.isUpdateMode){
-            return (<li onClick={this.handleClick}><MediumEditor/><UpdateBlogBox/></li>);
-        }else{
-            return (<li><div dangerouslySetInnerHTML={{__html: articleHtml}}></div><hr/></li>);
-        }
+        console.log(this.state.isUpdateMode);
+
+        return (
+            <li onClick={this.handleClick}>
+                <div dangerouslySetInnerHTML={{__html: articleHtml}}></div>
+                <UpdateBlogBox updatemode={this.state.isUpdateMode} closeBox={this.closeUpdateBox}/>
+                <hr/>
+            </li>
+        );
     }
 });
 
@@ -52,7 +64,6 @@ var AddBlogBox = React.createClass({
         );
     },
     render: function(){
-        var self = this;
         return (
             <div>
                 <MediumEditor ref="editor"/>
@@ -63,21 +74,21 @@ var AddBlogBox = React.createClass({
 
 var UpdateBlogBox = React.createClass({
     updateBlog: function(event){
-        event.preventDefault();
-        var trixeditor = document.querySelector('trix-editor#add_blog_editor').editor;
-        var editorStorage = JSON.parse(localStorage["mediumBlogStorage"]);
-        editorStorage.push(trixeditor);
-        localStorage["mediumBlogStorage"] = JSON.stringify(editorStorage);
-        ReactDOM.render(
-            <BlogList/>,
-            document.getElementById('article_list')
-        );
     },
     render: function(){
+        var style = {}
+
+        if(!this.props.updatemode){
+            style['display'] = 'none';
+        }
+
         return (
-            <div>
-                <MediumEditor/>
-                <a onClick={this.updateBlog}>update</a>
+            <div style={style}>
+                <a onClick={this.props.closeBox}>close</a>
+                <div>
+                    <MediumEditor/>
+                    <a onClick={this.updateBlog}>update</a>
+                </div>
             </div>
         )
     }

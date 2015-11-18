@@ -76,26 +76,28 @@
 	    getInitialState: function () {
 	        return { isUpdateMode: false };
 	    },
-	    handleClick: function (event) {
-	        this.setState({ isUpdateMode: !this.state.isUpdateMode });
+	    updateMode: function (event) {
+	        this.setState({ isUpdateMode: true });
+	    },
+	    closeUpdateBox: function () {
+	        this.setState({ isUpdateMode: false });
+	    },
+	    handleClick: function () {
+	        if (!this.state.isUpdateMode) {
+	            this.updateMode();
+	        }
 	    },
 	    render: function () {
 	        var articleHtml = this.props.blog;
-	        if (this.state.isUpdateMode) {
-	            return React.createElement(
-	                'li',
-	                { onClick: this.handleClick },
-	                React.createElement(MediumEditor, null),
-	                React.createElement(UpdateBlogBox, null)
-	            );
-	        } else {
-	            return React.createElement(
-	                'li',
-	                null,
-	                React.createElement('div', { dangerouslySetInnerHTML: { __html: articleHtml } }),
-	                React.createElement('hr', null)
-	            );
-	        }
+	        console.log(this.state.isUpdateMode);
+	
+	        return React.createElement(
+	            'li',
+	            { onClick: this.handleClick },
+	            React.createElement('div', { dangerouslySetInnerHTML: { __html: articleHtml } }),
+	            React.createElement(UpdateBlogBox, { updatemode: this.state.isUpdateMode, closeBox: this.closeUpdateBox }),
+	            React.createElement('hr', null)
+	        );
 	    }
 	});
 	
@@ -109,7 +111,6 @@
 	        ReactDOM.render(React.createElement(BlogList, null), document.getElementById('article_list'));
 	    },
 	    render: function () {
-	        var self = this;
 	        return React.createElement(
 	            'div',
 	            null,
@@ -124,23 +125,31 @@
 	});
 	
 	var UpdateBlogBox = React.createClass({
-	    updateBlog: function (event) {
-	        event.preventDefault();
-	        var trixeditor = document.querySelector('trix-editor#add_blog_editor').editor;
-	        var editorStorage = JSON.parse(localStorage["mediumBlogStorage"]);
-	        editorStorage.push(trixeditor);
-	        localStorage["mediumBlogStorage"] = JSON.stringify(editorStorage);
-	        ReactDOM.render(React.createElement(BlogList, null), document.getElementById('article_list'));
-	    },
+	    updateBlog: function (event) {},
 	    render: function () {
+	        var style = {};
+	
+	        if (!this.props.updatemode) {
+	            style['display'] = 'none';
+	        }
+	
 	        return React.createElement(
 	            'div',
-	            null,
-	            React.createElement(MediumEditor, null),
+	            { style: style },
 	            React.createElement(
 	                'a',
-	                { onClick: this.updateBlog },
-	                'update'
+	                { onClick: this.props.closeBox },
+	                'close'
+	            ),
+	            React.createElement(
+	                'div',
+	                null,
+	                React.createElement(MediumEditor, null),
+	                React.createElement(
+	                    'a',
+	                    { onClick: this.updateBlog },
+	                    'update'
+	                )
 	            )
 	        );
 	    }
